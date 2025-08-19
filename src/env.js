@@ -11,6 +11,13 @@ export const env = createEnv({
 		NODE_ENV: z
 			.enum(["development", "test", "production"])
 			.default("development"),
+		AWS_ACCESS_KEY_ID: z.string(),
+		AWS_SECRET_ACCESS_KEY: z.string(),
+		AWS_REGION: z.string(),
+		S3_BUCKET_NAME: z.string(),
+		REKOGNITION_COLLECTION_ID: z.string(),
+		SUPABASE_URL: z.string().url(),
+		SUPABASE_ANON_KEY: z.string(),
 	},
 
 	/**
@@ -29,6 +36,13 @@ export const env = createEnv({
 	runtimeEnv: {
 		DATABASE_URL: process.env.DATABASE_URL,
 		NODE_ENV: process.env.NODE_ENV,
+		AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
+		AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
+		AWS_REGION: process.env.AWS_REGION,
+		S3_BUCKET_NAME: process.env.S3_BUCKET_NAME,
+		REKOGNITION_COLLECTION_ID: process.env.REKOGNITION_COLLECTION_ID,
+		SUPABASE_URL: process.env.SUPABASE_URL,
+		SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
 		// NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
 	},
 	/**

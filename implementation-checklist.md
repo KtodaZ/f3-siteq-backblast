@@ -5,165 +5,132 @@ This document provides a comprehensive, phased checklist for implementing the fa
 ## Project Overview
 - **Goal**: Cloud-based web service for face recognition in group photos
 - **Scale**: ~20 users, 1000+ photos/month, 15-20 people per photo
-- **Stack**: Turborepo, Next.js (Vercel), AWS Lambda/S3/Rekognition, PostgreSQL (Neon), Drizzle ORM, Redis (Upstash)
-- **Budget**: <$30/month operational cost
+- **Stack**: T3 Stack (Next.js, TypeScript, Tailwind, tRPC, Drizzle, NextAuth), Vercel hosting, AWS Lambda/S3/Rekognition, Supabase PostgreSQL
+- **Budget**: ~$3.80/month operational cost
 
 ---
 
-## Phase 1: MVP Foundation (6-8 weeks)
+## Phase 1: T3 Stack MVP (4-6 weeks)
 
-### 1.1 Project Infrastructure Setup
+### 1.1 T3 Stack Project Setup
 
-#### 1.1.1 Turborepo Structure
-- [ ] Initialize Turborepo monorepo with following structure:
+#### 1.1.1 Create T3 App
+- [ ] Initialize T3 app with `npx create-t3-app@latest`
+- [ ] Select options: TypeScript, Tailwind CSS, tRPC, Drizzle, NextAuth.js
+- [ ] Project structure:
   ```
   /
-  ├── apps/
-  │   └── web/                    # Next.js frontend
-  │       ├── src/
-  │       │   ├── app/
-  │       │   │   ├── api/
-  │       │   │   ├── components/
-  │       │   │   └── globals.css
-  │       │   └── lib/
-  │       ├── public/
-  │       ├── next.config.js
-  │       └── package.json
-  ├── packages/
-  │   ├── database/               # Drizzle schema & migrations
-  │   │   ├── src/
-  │   │   │   ├── schema.ts
-  │   │   │   └── migrate.ts
-  │   │   └── package.json
-  │   ├── shared/                 # Shared utilities
-  │   │   ├── src/
-  │   │   │   ├── types.ts
-  │   │   │   └── utils.ts
-  │   │   └── package.json
-  │   └── ui/                     # Shared UI components
-  │       ├── src/
-  │       └── package.json
+  ├── src/
+  │   ├── app/                    # Next.js App Router
+  │   │   ├── api/
+  │   │   ├── globals.css
+  │   │   └── layout.tsx
+  │   ├── components/             # React components
+  │   ├── lib/                    # Utility functions
+  │   ├── server/                 # tRPC server code
+  │   │   └── api/
+  │   ├── styles/                 # Global styles
+  │   └── types/                  # TypeScript types
   ├── lambda/                     # AWS Lambda functions
-  ├── docs/
-  ├── turbo.json
-  ├── package.json
-  └── README.md
+  ├── drizzle/                    # Database migrations
+  ├── public/                     # Static assets
+  ├── next.config.js
+  └── package.json
   ```
 
-#### 1.1.2 Turborepo Setup
-- [ ] Initialize Turborepo with `npx create-turbo@latest`
-- [ ] Configure turbo.json for build pipeline
-- [ ] Set up workspace dependencies in root package.json
-- [ ] Create Next.js app in `apps/web/`
-- [ ] Configure Tailwind CSS for styling
-- [ ] **Acceptance**: `turbo dev` starts all applications successfully
+#### 1.1.2 T3 Stack Configuration
+- [ ] Configure TypeScript with strict mode
+- [ ] Set up Tailwind CSS with custom theme
+- [ ] Configure tRPC with type-safe API routes
+- [ ] Set up Drizzle with Supabase connection
+- [ ] Configure NextAuth.js for authentication
+- [ ] **Acceptance**: `npm run dev` starts application successfully
 
-#### 1.1.3 Shared Packages Setup
-- [ ] Create `packages/database` with Drizzle configuration
-- [ ] Create `packages/shared` for common types and utilities
-- [ ] Create `packages/ui` for reusable React components
-- [ ] Configure TypeScript path mapping for monorepo
-- [ ] **Acceptance**: Packages import correctly across workspace
-
-#### 1.1.4 Environment Configuration
-- [ ] Create `.env.local` file template with required variables:
+#### 1.1.3 Environment Configuration
+- [ ] Create `.env.local` file with T3 environment variables:
   ```
-  AWS_ACCESS_KEY_ID=
-  AWS_SECRET_ACCESS_KEY=
-  AWS_REGION=us-east-1
-  S3_BUCKET_NAME=
-  DATABASE_URL=
-  UPSTASH_REDIS_REST_URL=
-  UPSTASH_REDIS_REST_TOKEN=
-  REKOGNITION_COLLECTION_ID=
-  NEXTAUTH_SECRET=
-  NEXTAUTH_URL=
+  DATABASE_URL="postgresql://..."
+  NEXTAUTH_SECRET="..."
+  NEXTAUTH_URL="http://localhost:3000"
+  AWS_ACCESS_KEY_ID="..."
+  AWS_SECRET_ACCESS_KEY="..."
+  AWS_REGION="us-east-1"
+  S3_BUCKET_NAME="..."
+  REKOGNITION_COLLECTION_ID="..."
+  SUPABASE_URL="..."
+  SUPABASE_ANON_KEY="..."
   ```
-- [ ] Set up `.env.example` for documentation
-- [ ] Configure environment validation in `packages/shared/src/config.ts`
-- [ ] Share environment config across workspace packages
+- [ ] Configure environment validation with zod
+- [ ] Set up type-safe environment config
 
-### 1.2 Database Setup with Prisma
+#### 1.1.4 tRPC API Setup
+- [ ] Create tRPC router structure in `src/server/api/`
+- [ ] Set up context with database and authentication
+- [ ] Create type-safe API procedures
+- [ ] Configure tRPC client for frontend
+- [ ] **Acceptance**: T3 app runs with tRPC working
 
-#### 1.2.1 PlanetScale Database Setup
-- [ ] Create free PlanetScale database (1 billion row reads/month)
+### 1.2 Database Setup with Drizzle
+
+#### 1.2.1 Supabase Database Setup
+- [ ] Create free Supabase project (500MB database, 2GB bandwidth)
 - [ ] Configure connection string in environment
-- [ ] Set up database branching for schema changes
+- [ ] Set up row-level security policies
 - [ ] **Acceptance**: Database connection established
 
-#### 1.2.2 Prisma Schema Setup
-- [ ] Create Prisma schema in `prisma/schema.prisma`:
-  ```prisma
-  generator client {
-    provider = "prisma-client-js"
-  }
+#### 1.2.2 Drizzle Schema Setup
+- [ ] Create Drizzle schema in `src/server/db/schema.ts`:
+  ```typescript
+  import { pgTable, serial, varchar, timestamp, integer, real, jsonb, boolean } from 'drizzle-orm/pg-core';
 
-  datasource db {
-    provider = "mysql"
-    url = env("DATABASE_URL")
-    relationMode = "prisma"
-  }
+  export const users = pgTable('users', {
+    id: varchar('id', { length: 255 }).notNull().primaryKey(),
+    name: varchar('name', { length: 255 }),
+    email: varchar('email', { length: 255 }).notNull(),
+    emailVerified: timestamp('emailVerified', { mode: 'date' }),
+    image: varchar('image', { length: 255 }),
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
+  });
 
-  model User {
-    id String @id @default(cuid())
-    name String?
-    email String @unique
-    image String?
-    accounts Account[]
-    sessions Session[]
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-  }
+  export const people = pgTable('people', {
+    id: serial('id').primaryKey(),
+    name: varchar('name', { length: 255 }).notNull(),
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
+  });
 
-  model Person {
-    id Int @id @default(autoincrement())
-    name String
-    faceEncodings FaceEncoding[]
-    photoFaces PhotoFace[]
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-  }
+  export const faceEncodings = pgTable('face_encodings', {
+    id: serial('id').primaryKey(),
+    personId: integer('person_id').references(() => people.id),
+    awsFaceId: varchar('aws_face_id', { length: 255 }).unique().notNull(),
+    confidence: real('confidence'),
+    imageUrl: varchar('image_url', { length: 500 }),
+    createdAt: timestamp('created_at').defaultNow(),
+  });
 
-  model Photo {
-    id Int @id @default(autoincrement())
-    filename String
-    s3Key String
-    uploadDate DateTime @default(now())
-    processingStatus String @default("pending")
-    faceCount Int @default(0)
-    faces PhotoFace[]
-  }
+  export const photos = pgTable('photos', {
+    id: serial('id').primaryKey(),
+    filename: varchar('filename', { length: 255 }).notNull(),
+    s3Key: varchar('s3_key', { length: 500 }).notNull(),
+    uploadDate: timestamp('upload_date').defaultNow(),
+    processingStatus: varchar('processing_status', { length: 50 }).default('pending'),
+    faceCount: integer('face_count').default(0),
+  });
 
-  model FaceEncoding {
-    id Int @id @default(autoincrement())
-    personId Int
-    person Person @relation(fields: [personId], references: [id])
-    awsFaceId String @unique
-    confidence Float?
-    imageUrl String?
-    createdAt DateTime @default(now())
-
-    @@index([personId])
-  }
-
-  model PhotoFace {
-    id Int @id @default(autoincrement())
-    photoId Int
-    photo Photo @relation(fields: [photoId], references: [id])
-    personId Int?
-    person Person? @relation(fields: [personId], references: [id])
-    awsFaceId String?
-    confidence Float?
-    boundingBox Json?
-    isConfirmed Boolean @default(false)
-
-    @@index([photoId])
-    @@index([personId])
-  }
+  export const photoFaces = pgTable('photo_faces', {
+    id: serial('id').primaryKey(),
+    photoId: integer('photo_id').references(() => photos.id),
+    personId: integer('person_id').references(() => people.id),
+    awsFaceId: varchar('aws_face_id', { length: 255 }),
+    confidence: real('confidence'),
+    boundingBox: jsonb('bounding_box'),
+    isConfirmed: boolean('is_confirmed').default(false),
+  });
   ```
-- [ ] Generate Prisma client
-- [ ] Push schema to database
-- [ ] **Acceptance**: Database schema applied successfully
+- [ ] Generate migrations with `npm run db:generate`
+- [ ] Push schema to database with `npm run db:push`
+- [ ] **Acceptance**: Database schema applied successfully with Drizzle
 
 ### 1.3 AWS Infrastructure Setup
 
@@ -452,10 +419,10 @@ This document provides a comprehensive, phased checklist for implementing the fa
 - **Hosting**: $0/month (Vercel Hobby plan - 100GB bandwidth)
 - **Face Recognition API**: $1.50/month (AWS Rekognition)
 - **Photo Storage**: $2.30/month (S3, 100GB)
-- **Database**: $0/month (Neon PostgreSQL free tier - 512MB)
-- **Caching**: $0/month (Upstash Redis free tier - 10K commands/day)
-- **Lambda Functions**: $5-10/month (processing time)
-- **Total Estimated**: $8.80-13.80/month
+- **Database**: $0/month (Supabase free tier - 500MB)
+- **Authentication**: $0/month (Supabase Auth)
+- **Lambda Functions**: $0/month (AWS free tier)
+- **Total Estimated**: $3.80/month
 
 ### Development Costs
 - Phase 1 MVP: 6-8 weeks development
@@ -463,7 +430,7 @@ This document provides a comprehensive, phased checklist for implementing the fa
 - Ongoing maintenance: 2-4 hours/month
 
 ### Cost Optimization Strategies
-- Use free tiers: Vercel, Neon, Upstash for zero hosting costs
+- Use free tiers: Vercel, Supabase for zero hosting costs
 - Optimize Lambda execution time to minimize compute costs
 - Implement image compression to reduce S3 storage
 - Use CloudFront CDN free tier for faster image delivery
@@ -504,8 +471,8 @@ export async function POST(request: NextRequest) {
 #### Database Operations with Drizzle
 ```typescript
 // Use Drizzle ORM for type-safe database operations
-import { db } from '@repo/database/db';
-import { people, faceEncodings } from '@repo/database/schema';
+import { db } from '~/server/db';
+import { people, faceEncodings } from '~/server/db/schema';
 import { eq } from 'drizzle-orm';
 
 async function getPerson(id: number) {
@@ -644,10 +611,11 @@ const rekognitionClient = new RekognitionClient({
 
 This checklist provides a comprehensive roadmap for implementing the face recognition service with Turborepo, Next.js, Drizzle ORM, and cost-optimized infrastructure. Each task includes specific acceptance criteria and technical guidance for LLM execution.
 
-### Turborepo Commands Reference
-- `turbo dev` - Start all apps in development mode
-- `turbo build` - Build all packages and apps
-- `turbo lint` - Run linting across all packages
-- `turbo test` - Run tests across all packages
-- `turbo build --filter=web` - Build only the web app
-- `turbo dev --filter=web` - Start only the web app in dev mode
+### T3 Stack Commands Reference
+- `npm run dev` - Start development server
+- `npm run build` - Build the application
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
+- `npm run db:generate` - Generate Drizzle migrations
+- `npm run db:push` - Push schema to database
+- `npm run db:studio` - Open Drizzle Studio

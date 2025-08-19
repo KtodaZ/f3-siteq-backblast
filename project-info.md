@@ -55,41 +55,80 @@ Build a cloud-based web service that identifies people by name in uploaded photo
 - PersonGroup feature for multiple face samples
 - Requires Microsoft approval for access
 
+### T3 Stack with Modern Tooling
+**Next.js 14+ with App Router**
+- React-based full-stack framework
+- API routes for serverless functions
+- Built-in optimization and performance
+- Excellent Vercel deployment integration
+
+**TypeScript**
+- End-to-end type safety
+- Better developer experience
+- Reduced runtime errors
+
+**Tailwind CSS**
+- Utility-first CSS framework
+- Mobile-first responsive design
+- Excellent component styling
+
+**tRPC**
+- End-to-end typesafe APIs
+- Client-server type sharing
+- Excellent developer experience
+- Real-time subscriptions support
+
+**Drizzle ORM**
+- Type-safe database client
+- Lightweight and performant
+- Excellent TypeScript integration
+- SQL-like query builder
+
+**NextAuth.js**
+- Complete authentication solution
+- Multiple provider support
+- Session management
+- CSRF protection
+
 ### Hosting & Infrastructure
-**Recommended: AWS Infrastructure**
-- Vercel incompatible due to 10-second function timeouts
-- AWS Lambda for API processing
+**Recommended: Vercel + Supabase + AWS Hybrid**
+- Vercel for Next.js app hosting (free tier)
+- Supabase for PostgreSQL database and auth
+- AWS Lambda for heavy face processing
 - S3 for photo storage
-- Total estimated cost: $30-50/month
+- Total estimated cost: $5-15/month
 
 **Architecture Pattern:**
 ```
-Frontend → API Gateway → Lambda → Rekognition
-                     ↓
-         S3 Storage ← Database ← Redis Cache
+Next.js App (Vercel) → tRPC → AWS Lambda → Rekognition
+         ↓                          ↓
+   Drizzle ORM → Supabase    S3 Storage
 ```
 
 ### Database Solution
-**Primary: PostgreSQL with pgvector**
-- Cost-effective at $25/month vs $70/month for Pinecone
-- Sufficient performance for <10,000 faces
-- Standard SQL with vector search capabilities
+**Primary: Supabase PostgreSQL**
+- Managed PostgreSQL with real-time features
+- Free tier: 500MB database, 2GB bandwidth
+- Built-in authentication and row-level security
+- Excellent Drizzle ORM integration
 
-**Caching: Redis**
-- Sub-millisecond face encoding retrieval
-- 2-day retention for active lookups
-- Significant performance boost for repeated queries
+**Caching: Built-in Browser/Edge Caching**
+- Vercel Edge caching for static assets
+- React Query for client-side caching
+- Supabase connection pooling
 
 ### Frontend Framework
-**Recommended: Svelte/SvelteKit**
-- 30% faster mobile load times vs React
-- 1.7KB bundle sizes for mobile optimization
-- Compile-time optimization benefits
+**Next.js with React**
+- Server-side rendering and static generation
+- Excellent mobile performance with optimization
+- Component-based architecture
+- Progressive Web App capabilities
 
 **Mobile Considerations:**
-- PWA camera access limitations on iOS
-- Requires Safari browser, not installed PWA
-- Implement dual manifest approach for cross-platform
+- Next.js PWA support with next-pwa
+- Camera access via WebRTC APIs
+- Offline functionality with service workers
+- App-like experience on mobile devices
 
 ## System Features
 
@@ -127,33 +166,37 @@ Frontend → API Gateway → Lambda → Rekognition
 
 ## Implementation Phases
 
-### Phase 1: MVP (Months 1-2)
+### Phase 1: T3 Stack MVP (Months 1-2)
+- Next.js app with TypeScript and Tailwind CSS
+- tRPC API setup with type-safe endpoints
+- Drizzle schema and Supabase integration
+- NextAuth.js authentication system
 - Basic photo upload and face detection
 - Simple name assignment interface
 - Core AWS Rekognition integration
-- PostgreSQL database setup
-- Estimated development: 6-8 weeks
+- Estimated development: 4-6 weeks
 
 ### Phase 2: Enhancement (Months 3-4)
 - Advanced preprocessing pipeline
-- Redis caching implementation
-- Mobile PWA optimization
-- Multi-region deployment
-- Estimated development: 4-6 weeks
+- React Query caching implementation
+- Mobile PWA optimization with next-pwa
+- Real-time updates with Supabase realtime
+- Enhanced UI components with Tailwind
+- Estimated development: 3-4 weeks
 
 ## Budget Breakdown
 
 ### Monthly Operating Costs (20 users, 1000 photos/month)
+- **Hosting**: $0/month (Vercel Hobby plan - 100GB bandwidth)
 - **Face Recognition API**: $1.50/month (AWS Rekognition)
 - **Photo Storage**: $2.30/month (S3, 100GB)
-- **Database**: $25/month (PostgreSQL RDS)
-- **Face Metadata Storage**: $1.00/month
-- **Caching**: $5-10/month (Redis)
-- **Total Estimated**: $30-50/month
+- **Database**: $0/month (Supabase free tier - 500MB)
+- **Authentication**: $0/month (Supabase Auth)
+- **Total Estimated**: $3.80/month
 
 ### Development Costs
-- Phase 1 MVP: 6-8 weeks development
-- Phase 2 Enhancement: 4-6 weeks development
+- Phase 1 MVP: 4-6 weeks development
+- Phase 2 Enhancement: 3-4 weeks development
 - Ongoing maintenance: 2-4 hours/month
 
 ## Privacy & Compliance
