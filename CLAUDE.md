@@ -10,6 +10,8 @@ This is a T3 Stack face recognition service for small organizations (~20 users) 
 
 ## Development Commands
 
+**Package Manager**: This project uses `pnpm` (configured in package.json). Use `pnpm install` for dependencies.
+
 ### Core Development
 - `npm run dev` - Start development server with Turbo mode
 - `npm run build` - Build Next.js application  
@@ -106,6 +108,10 @@ Run `npm run check` to validate code style and formatting.
 - AWS credentials managed through environment variables
 - S3 bucket configured with public access blocked
 - All sensitive data encrypted at rest and in transit
+
+## Implementation Guide
+
+For comprehensive implementation guidance, see `implementation-checklist.md` which provides a detailed, phased roadmap for building the face recognition service with specific tasks, acceptance criteria, and technical patterns.
 
 ## Claude Code Permissions
 

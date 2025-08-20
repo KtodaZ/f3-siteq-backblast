@@ -9,4 +9,5 @@ export default {
 		url: env.DATABASE_URL,
 	},
 	tablesFilter: ["f3-siteq-backblast_*"],
+	schemaFilter: ["public"],
 } satisfies Config;

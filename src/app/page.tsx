@@ -1,53 +1,126 @@
 import Link from "next/link";
+import { HydrateClient } from "~/trpc/server";
 
-import { LatestPost } from "~/app/_components/post";
-import { HydrateClient, api } from "~/trpc/server";
-
-export default async function Home() {
-	const hello = await api.post.hello({ text: "from tRPC" });
-
-	void api.post.getLatest.prefetch();
-
+export default function Home() {
 	return (
 		<HydrateClient>
-			<main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
-				<div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
-					<h1 className="font-extrabold text-5xl tracking-tight sm:text-[5rem]">
-						Create <span className="text-[hsl(280,100%,70%)]">T3</span> App
+			<div className="container mx-auto px-4 py-12">
+				{/* Hero Section */}
+				<div className="mb-16 text-center">
+					<h1 className="mb-6 font-bold text-5xl text-gray-900">
+						F3 Face Recognition
 					</h1>
-					<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-8">
+					<p className="mx-auto mb-8 max-w-3xl text-gray-600 text-xl">
+						AI-powered face recognition for group photos. Upload photos,
+						identify people, and build a searchable database of your community
+						events.
+					</p>
+					<div className="flex flex-col justify-center gap-4 sm:flex-row">
 						<Link
-							className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 hover:bg-white/20"
-							href="https://create.t3.gg/en/usage/first-steps"
-							target="_blank"
+							href="/upload"
+							className="rounded-lg bg-blue-500 px-8 py-3 font-medium text-lg text-white transition-colors hover:bg-blue-600"
 						>
-							<h3 className="font-bold text-2xl">First Steps →</h3>
-							<div className="text-lg">
-								Just the basics - Everything you need to know to set up your
-								database and authentication.
-							</div>
+							Upload Photos
 						</Link>
 						<Link
-							className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 hover:bg-white/20"
-							href="https://create.t3.gg/en/introduction"
-							target="_blank"
+							href="/photos"
+							className="rounded-lg bg-gray-100 px-8 py-3 font-medium text-gray-900 text-lg transition-colors hover:bg-gray-200"
 						>
-							<h3 className="font-bold text-2xl">Documentation →</h3>
-							<div className="text-lg">
-								Learn more about Create T3 App, the libraries it uses, and how
-								to deploy it.
-							</div>
+							View Gallery
 						</Link>
 					</div>
-					<div className="flex flex-col items-center gap-2">
-						<p className="text-2xl text-white">
-							{hello ? hello.greeting : "Loading tRPC query..."}
+				</div>
+
+				{/* Features */}
+				<div className="mb-16 grid gap-8 md:grid-cols-3">
+					<div className="rounded-lg bg-white p-6 text-center shadow-lg">
+						<div className="mb-4 text-4xl">🔍</div>
+						<h3 className="mb-2 font-semibold text-xl">Smart Recognition</h3>
+						<p className="text-gray-600">
+							Advanced AI automatically detects and recognizes faces in group
+							photos with high accuracy.
 						</p>
 					</div>
-
-					<LatestPost />
+					<div className="rounded-lg bg-white p-6 text-center shadow-lg">
+						<div className="mb-4 text-4xl">⚡</div>
+						<h3 className="mb-2 font-semibold text-xl">Fast Processing</h3>
+						<p className="text-gray-600">
+							Process photos with 15-20 people in under 2 minutes using
+							cloud-based processing.
+						</p>
+					</div>
+					<div className="rounded-lg bg-white p-6 text-center shadow-lg">
+						<div className="mb-4 text-4xl">👥</div>
+						<h3 className="mb-2 font-semibold text-xl">People Management</h3>
+						<p className="text-gray-600">
+							Build and manage a database of people with smart face matching and
+							organization.
+						</p>
+					</div>
 				</div>
-			</main>
+
+				{/* How it Works */}
+				<div className="mb-16 rounded-xl bg-gray-50 p-8">
+					<h2 className="mb-8 text-center font-bold text-3xl">How It Works</h2>
+					<div className="grid gap-6 md:grid-cols-4">
+						<div className="text-center">
+							<div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-500 font-bold text-white text-xl">
+								1
+							</div>
+							<h4 className="mb-2 font-semibold">Upload Photos</h4>
+							<p className="text-gray-600 text-sm">
+								Drag and drop or select photos from your device
+							</p>
+						</div>
+						<div className="text-center">
+							<div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-500 font-bold text-white text-xl">
+								2
+							</div>
+							<h4 className="mb-2 font-semibold">AI Processing</h4>
+							<p className="text-gray-600 text-sm">
+								Our AI detects and analyzes faces in your photos
+							</p>
+						</div>
+						<div className="text-center">
+							<div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-500 font-bold text-white text-xl">
+								3
+							</div>
+							<h4 className="mb-2 font-semibold">Identify People</h4>
+							<p className="text-gray-600 text-sm">
+								Add names to faces and build your database
+							</p>
+						</div>
+						<div className="text-center">
+							<div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-500 font-bold text-white text-xl">
+								4
+							</div>
+							<h4 className="mb-2 font-semibold">Smart Recognition</h4>
+							<p className="text-gray-600 text-sm">
+								Future photos automatically recognize known people
+							</p>
+						</div>
+					</div>
+				</div>
+
+				{/* Stats */}
+				<div className="rounded-xl bg-blue-500 p-8 text-center text-white">
+					<h2 className="mb-6 font-bold text-2xl">Powerful & Efficient</h2>
+					<div className="grid gap-8 md:grid-cols-3">
+						<div>
+							<div className="mb-2 font-bold text-3xl">95%+</div>
+							<div className="text-blue-100">Recognition Accuracy</div>
+						</div>
+						<div>
+							<div className="mb-2 font-bold text-3xl">&lt;2 min</div>
+							<div className="text-blue-100">Processing Time</div>
+						</div>
+						<div>
+							<div className="mb-2 font-bold text-3xl">20+</div>
+							<div className="text-blue-100">People per Photo</div>
+						</div>
+					</div>
+				</div>
+			</div>
 		</HydrateClient>
 	);
 }

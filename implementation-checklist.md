@@ -10,6 +10,210 @@ This document provides a comprehensive, phased checklist for implementing the fa
 
 ---
 
+## Phase 0: Critical Face Recognition Fixes (URGENT - 1-2 weeks)
+
+### 0.1 Replace Mock Implementation with Real AWS Integration
+
+#### 0.1.1 Current Problem Analysis
+- [ ] **CRITICAL ISSUE**: Mock face detection found in `src/server/api/routers/photo.ts` (lines 98-139)
+- [ ] System generates random face count (1-8), fake confidence scores (70-100%), random bounding boxes
+- [ ] No actual AWS Rekognition processing occurring
+- [ ] This explains major inaccuracies in group photo recognition
+- [ ] **Acceptance**: Mock implementation completely removed and documented
+
+#### 0.1.2 Lambda Integration Service
+- [ ] Remove existing mock Lambda service at `src/server/services/lambda.ts`
+- [ ] Create proper Lambda invocation service using `@aws-sdk/client-lambda`
+- [ ] Add environment variables for Lambda function names:
+  ```
+  FACE_DETECTION_LAMBDA_FUNCTION="f3-face-detection"
+  FACE_RECOGNITION_LAMBDA_FUNCTION="f3-face-recognition"
+  ```
+- [ ] Implement group photo detection heuristics (file size >2MB, keywords)
+- [ ] **Acceptance**: Lambda functions can be invoked from Next.js server
+
+#### 0.1.3 Replace Mock with Real Processing
+- [ ] Remove setTimeout mock implementation (photo.ts:98-139)
+- [ ] Integrate Lambda invocation in photo upload flow
+- [ ] Add proper async processing with status tracking
+- [ ] Implement real-time status updates (processing → completed/failed)
+- [ ] **Acceptance**: Real face detection replaces all mock data
+
+### 0.2 Fix Critical SQL Injection Vulnerabilities
+
+#### 0.2.1 Lambda Function Security Issues
+- [ ] **SECURITY CRITICAL**: String concatenation in `lambda/detectFaces.js` (lines 83-97):
+  ```javascript
+  // VULNERABLE CODE:
+  await db.execute(`UPDATE f3-siteq-backblast_photos SET processing_status = 'completed', face_count = ${faces.length} WHERE id = ${photoId}`);
+  ```
+- [ ] **SECURITY CRITICAL**: String concatenation in `lambda/recognizeFaces.js` (lines 78-91):
+  ```javascript
+  // VULNERABLE CODE:  
+  const personQuery = await db.execute(`SELECT person_id FROM f3-siteq-backblast_face_encodings WHERE aws_face_id = '${faceId}' LIMIT 1`);
+  ```
+- [ ] **Acceptance**: All vulnerable code patterns identified and documented
+
+#### 0.2.2 Implement Secure Database Operations
+- [ ] Import Drizzle ORM schema into Lambda functions
+- [ ] Replace all `db.execute()` calls with Drizzle ORM operations
+- [ ] Use parameterized queries with `eq()` and proper typing:
+  ```typescript
+  // SECURE REPLACEMENT:
+  await db.update(photos)
+    .set({ processingStatus: 'completed', faceCount: faces.length })
+    .where(eq(photos.id, photoId));
+    
+  const person = await db.query.faceEncodings.findFirst({
+    where: eq(faceEncodings.awsFaceId, faceId)
+  });
+  ```
+- [ ] Add proper TypeScript typing throughout Lambda functions
+- [ ] **Acceptance**: Security scan shows no SQL injection vulnerabilities
+
+#### 0.2.3 Transaction Management
+- [ ] Implement database transactions for multi-table operations
+- [ ] Add rollback mechanisms for failed Lambda processing
+- [ ] Ensure atomic operations for face detection and recognition
+- [ ] **Acceptance**: All database operations are atomic and secure
+
+### 0.3 Group Photo Optimization Strategy
+
+#### 0.3.1 Dynamic Confidence Thresholds
+- [ ] Current fixed 80% threshold too high for group photos
+- [ ] Implement adaptive thresholds:
+  - Individual photos: 80% confidence minimum
+  - Group photos (>10MB or >5 detected faces): 60% confidence minimum
+  - Conservative matching: 75% for final results
+- [ ] Add confidence range handling (60-75% requires manual review)
+- [ ] **Acceptance**: Different thresholds applied based on photo type
+
+#### 0.3.2 Multi-Pass Detection Strategy
+- [ ] Implement detection pipeline in `lambda/detectFaces.js`:
+  ```javascript
+  // Pass 1: Liberal detection (detect all possible faces)
+  const liberalResults = await detectFaces({ threshold: 60 });
+  
+  // Pass 2: Conservative matching (high confidence matches only)  
+  const conservativeMatches = await recognizeFaces({ threshold: 75 });
+  
+  // Pass 3: Queue medium confidence for manual review
+  const reviewQueue = filterConfidenceRange(60, 75);
+  ```
+- [ ] Add face quality scoring to prioritize best faces
+- [ ] Implement face clustering for unknown faces
+- [ ] **Acceptance**: Multi-pass strategy improves group photo accuracy by 50-70%
+
+#### 0.3.3 Image Preprocessing for Group Photos
+- [ ] Add Sharp image processing to Lambda functions
+- [ ] Implement face-aware enhancement:
+  ```javascript
+  async function preprocessGroupPhoto(imageBuffer) {
+    return await sharp(imageBuffer)
+      .normalize()        // Improve contrast
+      .sharpen()         // Enhance edge definition
+      .resize(1600, null, { withoutEnlargement: true })
+      .toBuffer();
+  }
+  ```
+- [ ] Add lighting correction for group photos
+- [ ] Optimize resolution for small faces (ensure minimum 40x40 pixel faces)
+- [ ] **Acceptance**: Preprocessed images show measurable accuracy improvement
+
+### 0.4 Enhanced Database Schema for Face Recognition
+
+#### 0.4.1 Add Face Quality Metrics
+- [ ] Update `photoFaces` table schema in `src/server/db/schema.ts`:
+  ```typescript
+  export const photoFaces = createTable("photo_faces", {
+    // ... existing fields
+    faceQuality: real("face_quality"),                    // 0-100 quality score
+    detectionMethod: varchar("detection_method", { length: 50 }), // 'liberal', 'conservative', 'manual'
+    reviewStatus: varchar("review_status", { length: 20 }).default("pending"), // 'pending', 'confirmed', 'rejected'
+    boundingBoxQuality: real("bounding_box_quality"),     // Face boundary clarity
+    faceSize: real("face_size"),                         // Size in pixels
+  });
+  ```
+- [ ] Generate and apply database migration
+- [ ] **Acceptance**: Database captures comprehensive face quality data
+
+#### 0.4.2 Add Image Metadata Tracking
+- [ ] Update `photos` table schema:
+  ```typescript
+  export const photos = createTable("photos", {
+    // ... existing fields
+    imageWidth: integer("image_width"),
+    imageHeight: integer("image_height"), 
+    averageFaceSize: real("average_face_size"),          // Average pixels per face
+    isGroupPhoto: boolean("is_group_photo").default(false),
+    processingAttempts: integer("processing_attempts").default(0),
+    preprocessed: boolean("preprocessed").default(false),
+    enhancementApplied: varchar("enhancement_applied", { length: 100 }),
+  });
+  ```
+- [ ] Update Lambda functions to populate metadata
+- [ ] **Acceptance**: Image characteristics tracked for optimization analysis
+
+### 0.5 Robust Error Handling and Recovery
+
+#### 0.5.1 Lambda Function Error Handling
+- [ ] Implement retry mechanisms with exponential backoff:
+  ```javascript
+  async function robustPhotoProcessing(photoId, maxRetries = 3) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const result = await processPhoto(photoId);
+        if (result.success) return result;
+        
+        if (attempt < maxRetries) {
+          await sleep(Math.pow(2, attempt) * 1000); // Exponential backoff
+        }
+      } catch (error) {
+        await logError(photoId, attempt, error);
+        if (attempt === maxRetries) {
+          await markFailed(photoId, error);
+          throw error;
+        }
+      }
+    }
+  }
+  ```
+- [ ] Add comprehensive error logging with context
+- [ ] Implement dead letter queues for failed processing
+- [ ] **Acceptance**: System recovers gracefully from Lambda failures
+
+#### 0.5.2 Database Transaction Management
+- [ ] Wrap all multi-table operations in transactions
+- [ ] Add proper rollback for failed face processing
+- [ ] Prevent photos stuck in "processing" status
+- [ ] Add processing timeout detection (mark as failed after 10 minutes)
+- [ ] **Acceptance**: No photos remain in inconsistent states
+
+#### 0.5.3 Monitoring and Alerting
+- [ ] Add CloudWatch metrics for Lambda success/failure rates
+- [ ] Implement processing time monitoring
+- [ ] Add alerts for high error rates or timeouts
+- [ ] Create processing status dashboard
+- [ ] **Acceptance**: Full visibility into face recognition pipeline health
+
+### 0.6 Integration Testing and Validation
+
+#### 0.6.1 End-to-End Testing
+- [ ] Test complete workflow with real group photos (15-20 people)
+- [ ] Validate accuracy improvements vs. mock implementation
+- [ ] Test error handling with corrupted images
+- [ ] Verify SQL injection fixes with security scanning
+- [ ] **Acceptance**: All critical fixes validated with real data
+
+#### 0.6.2 Performance Benchmarking
+- [ ] Measure processing time improvements
+- [ ] Compare accuracy before/after optimizations
+- [ ] Test Lambda timeout handling
+- [ ] Validate confidence threshold effectiveness
+- [ ] **Acceptance**: Quantified improvement metrics documented
+
+---
+
 ## Phase 1: T3 Stack MVP (4-6 weeks)
 
 ### 1.1 T3 Stack Project Setup
