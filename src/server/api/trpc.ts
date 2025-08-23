@@ -103,9 +103,9 @@ const timingMiddleware = t.middleware(async ({ next, path, input }) => {
 		if (path === 'people.createPersonWithFace') {
 			console.log(`✅ ULTRA-DEBUG: tRPC procedure ${path} COMPLETED SUCCESSFULLY`);
 			console.log(`📊 ULTRA-DEBUG: Result preview:`, {
-				success: result?.success,
-				personId: result?.person?.id,
-				faceId: result?.face?.id,
+				success: (result as any)?.success,
+				personId: (result as any)?.person?.id,
+				faceId: (result as any)?.face?.id,
 				procedureId,
 			});
 		}

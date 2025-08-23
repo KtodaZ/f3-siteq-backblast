@@ -4,55 +4,13 @@ import Link from "next/link";
 import { useState } from "react";
 import FacePreview from "~/app/_components/FacePreview";
 import { api } from "~/trpc/react";
+import type { RouterOutputs } from "~/trpc/react";
 
-// Type definitions for people data
-interface BoundingBox {
-	left: number;
-	top: number;
-	width: number;
-	height: number;
-}
-
-interface Person {
-	id: number;
-	name: string;
-	createdAt: Date | null;
-}
-
-interface Photo {
-	id: number;
-	filename: string;
-	s3Key: string;
-}
-
-interface PhotoFace {
-	id: number;
-	confidence: number | null;
-	boundingBox: BoundingBox | null;
-	photo: Photo | null;
-}
-
-interface FaceEncoding {
-	id: number;
-	personId: number | null;
-	awsFaceId: string;
-	confidence: number | null;
-	createdAt: Date | null;
-	totalInstances: number;
-	person: Person | null;
-	bestPhotoFace: PhotoFace | null;
-	associatedPhotoFaces: PhotoFace[];
-}
-
-interface PersonWithFaces extends Person {
-	bestPhotoFace: PhotoFace | null;
-	faceEncodingsCount: number;
-}
-
-interface DuplicateGroup {
-	person: Person | null;
-	encodings: FaceEncoding[];
-}
+// Infer types from tRPC router outputs
+type PersonWithFaces = RouterOutputs["people"]["getAll"][number];
+type DuplicateGroup = RouterOutputs["faces"]["findDuplicates"][number];
+type PhotoFace = PersonWithFaces["bestPhotoFace"];
+type FaceEncoding = RouterOutputs["faces"]["getAll"][number];
 
 interface DeletePersonMutation {
 	isPending: boolean;
@@ -222,7 +180,7 @@ export default function PeoplePage() {
 		setSelectedFaceIds(allDuplicateIds);
 	};
 
-	const displayPeople = searchQuery ? searchResults : people;
+	const displayPeople = searchQuery ? searchResults ?? [] : people ?? [];
 
 	if (isLoading) {
 		return (
@@ -393,7 +351,7 @@ export default function PeoplePage() {
 
 			{activeTab === "duplicates" && (
 				<DuplicatesTab
-					duplicateGroups={duplicateGroups}
+					duplicateGroups={duplicateGroups ?? []}
 					isLoadingDuplicates={isLoadingDuplicates}
 					selectedFaceIds={selectedFaceIds}
 					toggleFaceSelection={toggleFaceSelection}
@@ -404,7 +362,7 @@ export default function PeoplePage() {
 
 			{activeTab === "encodings" && (
 				<EncodingsTab
-					allFaceEncodings={allFaceEncodings}
+					allFaceEncodings={allFaceEncodings ?? []}
 					isLoadingFaces={isLoadingFaces}
 					selectedFaceIds={selectedFaceIds}
 					toggleFaceSelection={toggleFaceSelection}
@@ -549,7 +507,7 @@ function PersonCard({
 				person.bestPhotoFace?.boundingBox ? (
 					<FacePreview
 						imageUrl={`/api/image-proxy?key=${encodeURIComponent(person.bestPhotoFace.photo.s3Key)}`}
-						boundingBox={person.bestPhotoFace.boundingBox}
+						boundingBox={person.bestPhotoFace.boundingBox as { left: number; top: number; width: number; height: number }}
 						size={80}
 						className="rounded-full"
 						alt={`${person.name}'s face`}
@@ -803,7 +761,7 @@ function FaceCard({
 				{face.bestPhotoFace?.photo?.s3Key && face.bestPhotoFace?.boundingBox ? (
 					<FacePreview
 						imageUrl={`/api/image-proxy?key=${encodeURIComponent(face.bestPhotoFace.photo.s3Key)}`}
-						boundingBox={face.bestPhotoFace.boundingBox}
+						boundingBox={face.bestPhotoFace.boundingBox as { left: number; top: number; width: number; height: number }}
 						size={96}
 						className="rounded-full"
 						alt={`Face of ${face.person?.name || "Unknown"}`}
@@ -866,7 +824,8 @@ function FaceCard({
 						</h4>
 						<div className="grid grid-cols-2 gap-3">
 							{face.associatedPhotoFaces.map(
-								(photoFace: PhotoFace, index: number) => (
+								(photoFace: PhotoFace, index: number) => 
+									photoFace ? (
 									<div
 										key={photoFace.id}
 										className="flex flex-col items-center space-y-2"
@@ -874,7 +833,7 @@ function FaceCard({
 										{photoFace.photo?.s3Key && photoFace.boundingBox ? (
 											<FacePreview
 												imageUrl={`/api/image-proxy?key=${encodeURIComponent(photoFace.photo.s3Key)}`}
-												boundingBox={photoFace.boundingBox}
+												boundingBox={photoFace.boundingBox as { left: number; top: number; width: number; height: number }}
 												size={48}
 												className="rounded"
 												alt={`Instance ${index + 1}`}
@@ -889,7 +848,7 @@ function FaceCard({
 											<div>{photoFace.photo?.filename || "Unknown"}</div>
 										</div>
 									</div>
-								),
+								) : null,
 							)}
 						</div>
 					</div>
@@ -969,7 +928,7 @@ function DuplicateGroup({
 							face.bestPhotoFace?.boundingBox ? (
 								<FacePreview
 									imageUrl={`/api/image-proxy?key=${encodeURIComponent(face.bestPhotoFace.photo.s3Key)}`}
-									boundingBox={face.bestPhotoFace.boundingBox}
+									boundingBox={face.bestPhotoFace.boundingBox as { left: number; top: number; width: number; height: number }}
 									size={64}
 									className="rounded-full"
 									alt={`Face ${index + 1} of ${group.person?.name || "Unknown"}`}

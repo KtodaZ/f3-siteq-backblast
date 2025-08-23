@@ -112,7 +112,7 @@ export const peopleRouter = createTRPCRouter({
 				// 🔍 ULTRA-DEBUG: Add connection info before transaction
 				try {
 					const preTransactionTest = await ctx.db.execute(sql`SELECT pg_backend_pid() as backend_pid, txid_current() as transaction_id`);
-					console.log(`🔌 PRE-TRANSACTION: Connection info:`, preTransactionTest.rows[0]);
+					console.log(`🔌 PRE-TRANSACTION: Connection info:`, preTransactionTest[0]);
 				} catch (preTransactionError) {
 					console.error(`❌ PRE-TRANSACTION: Error getting connection info:`, preTransactionError);
 				}
@@ -125,7 +125,7 @@ export const peopleRouter = createTRPCRouter({
 					// 🔍 ULTRA-DEBUG: Check connection info within transaction
 					try {
 						const inTransactionTest = await tx.execute(sql`SELECT pg_backend_pid() as backend_pid, txid_current() as transaction_id`);
-						console.log(`🔌 IN-TRANSACTION: Connection info:`, inTransactionTest.rows[0]);
+						console.log(`🔌 IN-TRANSACTION: Connection info:`, inTransactionTest[0]);
 					} catch (inTransactionError) {
 						console.error(`❌ IN-TRANSACTION: Error getting connection info:`, inTransactionError);
 					}
@@ -225,30 +225,30 @@ export const peopleRouter = createTRPCRouter({
 						try {
 							// Use raw SQL to verify the person exists within the transaction
 							const rawPersonQuery = await tx.execute(sql`SELECT id, name FROM "f3-siteq-backblast_people" WHERE id = ${person.id}`);
-							console.log(`🔍 RAW-SQL: Person query result:`, rawPersonQuery.rows);
+							console.log(`🔍 RAW-SQL: Person query result:`, rawPersonQuery);
 							
 							// Use raw SQL to verify the face assignment exists within the transaction  
 							const rawFaceQuery = await tx.execute(sql`SELECT id, person_id, aws_face_id FROM "f3-siteq-backblast_photo_faces" WHERE id = ${input.faceId}`);
-							console.log(`🔍 RAW-SQL: Face query result:`, rawFaceQuery.rows);
+							console.log(`🔍 RAW-SQL: Face query result:`, rawFaceQuery);
 							
 							// Use raw SQL to verify the face encoding exists within the transaction
 							const rawEncodingQuery = await tx.execute(sql`SELECT id, person_id, aws_face_id FROM "f3-siteq-backblast_face_encodings" WHERE person_id = ${person.id}`);
-							console.log(`🔍 RAW-SQL: Face encoding query result:`, rawEncodingQuery.rows);
+							console.log(`🔍 RAW-SQL: Face encoding query result:`, rawEncodingQuery);
 							
 							// Check if all expected records exist within transaction
-							if (rawPersonQuery.rows.length === 0) {
+							if (rawPersonQuery.length === 0) {
 								console.error(`❌ RAW-SQL: Person ${person.id} NOT found within transaction!`);
 							} else {
 								console.log(`✅ RAW-SQL: Person ${person.id} found within transaction`);
 							}
 							
-							if (rawFaceQuery.rows.length === 0 || rawFaceQuery.rows[0].person_id != person.id) {
+							if (rawFaceQuery.length === 0 || rawFaceQuery[0]?.person_id != person.id) {
 								console.error(`❌ RAW-SQL: Face ${input.faceId} NOT properly assigned within transaction!`);
 							} else {
 								console.log(`✅ RAW-SQL: Face ${input.faceId} properly assigned within transaction`);
 							}
 							
-							if (rawEncodingQuery.rows.length === 0) {
+							if (rawEncodingQuery.length === 0) {
 								console.error(`❌ RAW-SQL: Face encoding NOT found for person ${person.id} within transaction!`);
 							} else {
 								console.log(`✅ RAW-SQL: Face encoding found for person ${person.id} within transaction`);
@@ -267,7 +267,7 @@ export const peopleRouter = createTRPCRouter({
 								current_setting('transaction_isolation') as isolation_level,
 								current_setting('transaction_read_only') as read_only
 							`);
-							console.log(`🔍 PRE-COMMIT: Transaction state:`, transactionState.rows[0]);
+							console.log(`🔍 PRE-COMMIT: Transaction state:`, transactionState[0]);
 						} catch (preCommitError) {
 							console.error(`❌ PRE-COMMIT: Error getting transaction state:`, preCommitError);
 						}
@@ -294,7 +294,7 @@ export const peopleRouter = createTRPCRouter({
 				// 🔍 ULTRA-DEBUG: Check connection info after transaction
 				try {
 					const postTransactionTest = await ctx.db.execute(sql`SELECT pg_backend_pid() as backend_pid, txid_current() as transaction_id`);
-					console.log(`🔌 POST-TRANSACTION: Connection info:`, postTransactionTest.rows[0]);
+					console.log(`🔌 POST-TRANSACTION: Connection info:`, postTransactionTest[0]);
 				} catch (postTransactionError) {
 					console.error(`❌ POST-TRANSACTION: Error getting connection info:`, postTransactionError);
 				}
@@ -302,7 +302,7 @@ export const peopleRouter = createTRPCRouter({
 				} catch (transactionError) {
 					console.error(`❌ TRANSACTION: Database transaction failed:`, transactionError);
 					console.error(`❌ TRANSACTION: Error type: ${transactionError?.constructor?.name}`);
-					console.error(`❌ TRANSACTION: Error message: ${transactionError?.message}`);
+					console.error(`❌ TRANSACTION: Error message: ${(transactionError as any)?.message}`);
 					console.error(`❌ TRANSACTION: Full error:`, transactionError);
 					
 					// Re-throw to be caught by outer try-catch
@@ -405,7 +405,7 @@ export const peopleRouter = createTRPCRouter({
 			} catch (error) {
 				console.error(`❌ Atomic person creation with face error for "${input.name}":`, error);
 				console.error(`❌ Error type: ${error?.constructor?.name}`);
-				console.error(`❌ Error message: ${error?.message}`);
+				console.error(`❌ Error message: ${(error as any)?.message}`);
 				console.error(`❌ Full error:`, error);
 				
 				if (error instanceof TRPCError) {
@@ -448,14 +448,15 @@ export const peopleRouter = createTRPCRouter({
 				},
 			});
 
-			// Enrich each person with their best photo face for display
+			// Enrich each person with their best photo face and face encodings count for display
 			const enrichedPeople = allPeople.map((person) => {
 				// Find the best photo face (highest confidence/quality)
-				const bestPhotoFace = person.photoFaces?.[0];
+				const bestPhotoFace = person.photoFaces?.[0] || null;
 
 				return {
 					...person,
 					bestPhotoFace,
+					faceEncodingsCount: person.faceEncodings.length,
 				};
 			});
 
@@ -703,9 +704,30 @@ export const peopleRouter = createTRPCRouter({
 				limit: 10,
 				with: {
 					faceEncodings: true,
+					photoFaces: {
+						with: {
+							photo: true,
+						},
+						orderBy: (photoFaces, { desc }) => [
+							desc(photoFaces.confidence),
+							desc(photoFaces.faceQuality),
+						],
+					},
 				},
 			});
 
-			return results;
+			// Enrich search results to match PersonWithFaces interface
+			const enrichedResults = results.map((person) => {
+				// Find the best photo face (highest confidence/quality)
+				const bestPhotoFace = person.photoFaces?.[0] || null;
+
+				return {
+					...person,
+					bestPhotoFace,
+					faceEncodingsCount: person.faceEncodings.length,
+				};
+			});
+
+			return enrichedResults;
 		}),
 });

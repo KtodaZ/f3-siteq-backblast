@@ -15,43 +15,8 @@ export default function PhotosPage() {
 			offset: 0,
 		},
 		{
-			// Smart polling: check for processing photos more frequently
-			refetchInterval: (data) => {
-				if (!data?.data) return false;
-
-				const processingPhotos = data.data.filter(
-					(photo) =>
-						photo.processingStatus === "processing" ||
-						photo.processingStatus === "pending",
-				);
-
-				if (processingPhotos.length === 0) return false; // No polling needed
-
-				// Graduated polling intervals with limits
-				const now = Date.now();
-				const oldestProcessingPhoto = processingPhotos
-					.filter((p) => p.uploadDate)
-					.reduce((oldest, current) =>
-						new Date(oldest.uploadDate!).getTime() <
-						new Date(current.uploadDate!).getTime()
-							? oldest
-							: current,
-					);
-
-				if (!oldestProcessingPhoto?.uploadDate) return 5000; // Default 5s if no upload date
-
-				const processingTime =
-					now - new Date(oldestProcessingPhoto.uploadDate).getTime();
-
-				// Stop polling after 10 minutes to prevent infinite polling
-				if (processingTime > 10 * 60 * 1000) return false;
-
-				// Graduated intervals: 2s -> 5s -> 10s -> 30s
-				if (processingTime < 30000) return 2000; // First 30s: every 2s
-				if (processingTime < 120000) return 5000; // Next 90s: every 5s
-				if (processingTime < 300000) return 10000; // Next 3min: every 10s
-				return 30000; // After 5min: every 30s until 10min limit
-			},
+			// Simple polling for now - will fix the smart polling logic later
+			refetchInterval: 5000, // Poll every 5 seconds
 			refetchOnWindowFocus: true, // Refresh when user comes back to tab
 		},
 	);

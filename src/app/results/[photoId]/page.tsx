@@ -56,26 +56,8 @@ export default function ResultsPage() {
 		{ id: photoId },
 		{
 			enabled: !Number.isNaN(photoId),
-			// Smart polling for processing status
-			refetchInterval: (data) => {
-				if (!data?.data) return false;
-
-				const status = data.data.processingStatus;
-				if (status === "completed" || status === "failed") return false;
-
-				// Stop polling after 10 minutes to prevent infinite polling
-				const uploadTime = data.data.uploadDate
-					? new Date(data.data.uploadDate).getTime()
-					: Date.now();
-				const processingTime = Date.now() - uploadTime;
-				if (processingTime > 10 * 60 * 1000) return false;
-
-				// Graduated intervals for processing status
-				if (processingTime < 30000) return 2000; // First 30s: every 2s
-				if (processingTime < 120000) return 5000; // Next 90s: every 5s
-				if (processingTime < 300000) return 10000; // Next 3min: every 10s
-				return 30000; // After 5min: every 30s
-			},
+			// Simple polling for processing status
+			refetchInterval: 5000, // Poll every 5 seconds
 			refetchOnWindowFocus: true,
 		},
 	);
@@ -86,25 +68,7 @@ export default function ResultsPage() {
 			{
 				enabled: !Number.isNaN(photoId),
 				// Poll for faces when photo is processing
-				refetchInterval: (data, query) => {
-					if (!photo) return false;
-
-					const status = photo.processingStatus;
-					if (status === "completed" || status === "failed") return false;
-
-					// Stop polling after 10 minutes
-					const uploadTime = photo.uploadDate
-						? new Date(photo.uploadDate).getTime()
-						: Date.now();
-					const processingTime = Date.now() - uploadTime;
-					if (processingTime > 10 * 60 * 1000) return false;
-
-					// Same graduated intervals as photo status
-					if (processingTime < 30000) return 2000;
-					if (processingTime < 120000) return 5000;
-					if (processingTime < 300000) return 10000;
-					return 30000;
-				},
+				refetchInterval: 5000, // Simple 5-second polling
 			},
 		);
 
@@ -270,10 +234,10 @@ export default function ResultsPage() {
 
 			// Extract error message from tRPC error
 			let errorMsg = "Failed to create person. Please try again.";
-			if (error?.message) {
-				errorMsg = error.message;
-			} else if (error?.data?.message) {
-				errorMsg = error.data.message;
+			if ((error as any)?.message) {
+				errorMsg = (error as any).message;
+			} else if ((error as any)?.data?.message) {
+				errorMsg = (error as any).data.message;
 			}
 
 			setErrorMessage(errorMsg);
