@@ -1,23 +1,73 @@
 "use client";
 
 import Link from "next/link";
-import { api } from "~/trpc/react";
 import PhotoImage from "~/app/_components/PhotoImage";
+import { api } from "~/trpc/react";
 
 export default function PhotosPage() {
 	const {
 		data: photos,
 		isLoading,
 		error,
-	} = api.photo.getAll.useQuery({
-		limit: 50,
-		offset: 0,
-	});
+	} = api.photo.getAll.useQuery(
+		{
+			limit: 50,
+			offset: 0,
+		},
+		{
+			// Smart polling: check for processing photos more frequently
+			refetchInterval: (data) => {
+				if (!data?.data) return false;
+
+				const processingPhotos = data.data.filter(
+					(photo) =>
+						photo.processingStatus === "processing" ||
+						photo.processingStatus === "pending",
+				);
+
+				if (processingPhotos.length === 0) return false; // No polling needed
+
+				// Graduated polling intervals with limits
+				const now = Date.now();
+				const oldestProcessingPhoto = processingPhotos
+					.filter((p) => p.uploadDate)
+					.reduce((oldest, current) =>
+						new Date(oldest.uploadDate!).getTime() <
+						new Date(current.uploadDate!).getTime()
+							? oldest
+							: current,
+					);
+
+				if (!oldestProcessingPhoto?.uploadDate) return 5000; // Default 5s if no upload date
+
+				const processingTime =
+					now - new Date(oldestProcessingPhoto.uploadDate).getTime();
+
+				// Stop polling after 10 minutes to prevent infinite polling
+				if (processingTime > 10 * 60 * 1000) return false;
+
+				// Graduated intervals: 2s -> 5s -> 10s -> 30s
+				if (processingTime < 30000) return 2000; // First 30s: every 2s
+				if (processingTime < 120000) return 5000; // Next 90s: every 5s
+				if (processingTime < 300000) return 10000; // Next 3min: every 10s
+				return 30000; // After 5min: every 30s until 10min limit
+			},
+			refetchOnWindowFocus: true, // Refresh when user comes back to tab
+		},
+	);
+
+	const utils = api.useUtils();
 
 	const deletePhotoMutation = api.photo.delete.useMutation({
-		onSuccess: () => {
-			// Refresh the photos list
-			window.location.reload();
+		onSuccess: (result, variables) => {
+			// Invalidate all photo-related queries
+			utils.photo.getAll.invalidate();
+			utils.photo.getById.invalidate({ id: variables.id });
+			utils.photo.getFaces.invalidate({ photoId: variables.id });
+			utils.photo.getPresignedUrl.invalidate({ photoId: variables.id });
+
+			// Since faces were deleted, also invalidate people queries that show face counts
+			utils.people.getAll.invalidate();
 		},
 	});
 
@@ -57,7 +107,7 @@ export default function PhotosPage() {
 		return (
 			<div className="container mx-auto px-4 py-8">
 				<div className="text-center">
-					<div className="mx-auto h-12 w-12 animate-spin rounded-full border-blue-500 border-b-2"></div>
+					<div className="mx-auto h-12 w-12 animate-spin rounded-full border-blue-500 border-b-2" />
 					<p className="mt-4 text-gray-600">Loading photos...</p>
 				</div>
 			</div>
@@ -141,7 +191,9 @@ export default function PhotosPage() {
 
 									<div className="flex items-center justify-between">
 										<span className="text-gray-600">Faces:</span>
-										<span className="font-medium">{photo.faceCount}</span>
+										<span className="font-medium">
+											{photo.taggedFaceCount}/{photo.faceCount || 0}
+										</span>
 									</div>
 
 									<div className="flex items-center justify-between">
@@ -163,6 +215,7 @@ export default function PhotosPage() {
 										View Results
 									</Link>
 									<button
+										type="button"
 										onClick={() => handleDeletePhoto(photo.id, photo.filename)}
 										disabled={deletePhotoMutation.isPending}
 										className="rounded bg-red-500 px-3 py-2 text-sm text-white transition-colors hover:bg-red-600 disabled:bg-gray-400"
@@ -210,9 +263,10 @@ export default function PhotosPage() {
 						</div>
 						<div className="text-center">
 							<div className="font-bold text-2xl text-purple-600">
+								{photos.reduce((sum, p) => sum + (p.taggedFaceCount || 0), 0)}/
 								{photos.reduce((sum, p) => sum + (p.faceCount || 0), 0)}
 							</div>
-							<div className="text-gray-600 text-sm">Total Faces</div>
+							<div className="text-gray-600 text-sm">Tagged/Total Faces</div>
 						</div>
 					</div>
 				</div>

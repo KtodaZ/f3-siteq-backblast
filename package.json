@@ -14,6 +14,7 @@
 		"db:studio": "drizzle-kit studio",
 		"dev": "next dev --turbo",
 		"setup:aws": "node scripts/setup-aws-collection.js",
+		"setup:cors": "node scripts/setup-s3-cors.js",
 		"preview": "next build && next start",
 		"start": "next start",
 		"test:e2e": "playwright test",

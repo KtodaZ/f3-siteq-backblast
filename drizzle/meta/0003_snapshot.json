@@ -1,6 +1,6 @@
 {
-	"id": "f8c85296-020d-4b0f-a74b-fcd77ee0c019",
-	"prevId": "eaca9602-68e7-4e43-9599-f39527d90b5f",
+	"id": "3bfc0e35-f73c-4639-8b3e-d119665d633e",
+	"prevId": "f8c85296-020d-4b0f-a74b-fcd77ee0c019",
 	"version": "7",
 	"dialect": "postgresql",
 	"tables": {
@@ -99,8 +99,8 @@
 					"tableTo": "f3-siteq-backblast_users",
 					"columnsFrom": ["userId"],
 					"columnsTo": ["id"],
-					"onDelete": "no action",
-					"onUpdate": "no action"
+					"onDelete": "cascade",
+					"onUpdate": "cascade"
 				}
 			},
 			"compositePrimaryKeys": {},
@@ -151,7 +151,38 @@
 					"default": "now()"
 				}
 			},
-			"indexes": {},
+			"indexes": {
+				"face_encodings_person_id_idx": {
+					"name": "face_encodings_person_id_idx",
+					"columns": [
+						{
+							"expression": "person_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"face_encodings_aws_face_id_idx": {
+					"name": "face_encodings_aws_face_id_idx",
+					"columns": [
+						{
+							"expression": "aws_face_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
 			"foreignKeys": {
 				"f3-siteq-backblast_face_encodings_person_id_f3-siteq-backblast_people_id_fk": {
 					"name": "f3-siteq-backblast_face_encodings_person_id_f3-siteq-backblast_people_id_fk",
@@ -206,7 +237,23 @@
 					"default": "now()"
 				}
 			},
-			"indexes": {},
+			"indexes": {
+				"people_name_idx": {
+					"name": "people_name_idx",
+					"columns": [
+						{
+							"expression": "name",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
 			"foreignKeys": {},
 			"compositePrimaryKeys": {},
 			"uniqueConstraints": {},
@@ -293,7 +340,68 @@
 					"notNull": false
 				}
 			},
-			"indexes": {},
+			"indexes": {
+				"photo_faces_photo_id_idx": {
+					"name": "photo_faces_photo_id_idx",
+					"columns": [
+						{
+							"expression": "photo_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"photo_faces_person_id_idx": {
+					"name": "photo_faces_person_id_idx",
+					"columns": [
+						{
+							"expression": "person_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"photo_faces_aws_face_id_idx": {
+					"name": "photo_faces_aws_face_id_idx",
+					"columns": [
+						{
+							"expression": "aws_face_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"photo_faces_review_status_idx": {
+					"name": "photo_faces_review_status_idx",
+					"columns": [
+						{
+							"expression": "review_status",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
 			"foreignKeys": {
 				"f3-siteq-backblast_photo_faces_photo_id_f3-siteq-backblast_photos_id_fk": {
 					"name": "f3-siteq-backblast_photo_faces_photo_id_f3-siteq-backblast_photos_id_fk",
@@ -408,7 +516,38 @@
 					"notNull": false
 				}
 			},
-			"indexes": {},
+			"indexes": {
+				"photos_processing_status_idx": {
+					"name": "photos_processing_status_idx",
+					"columns": [
+						{
+							"expression": "processing_status",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"photos_upload_date_idx": {
+					"name": "photos_upload_date_idx",
+					"columns": [
+						{
+							"expression": "upload_date",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
 			"foreignKeys": {},
 			"compositePrimaryKeys": {},
 			"uniqueConstraints": {},
@@ -512,8 +651,8 @@
 					"tableTo": "f3-siteq-backblast_users",
 					"columnsFrom": ["userId"],
 					"columnsTo": ["id"],
-					"onDelete": "no action",
-					"onUpdate": "no action"
+					"onDelete": "cascade",
+					"onUpdate": "cascade"
 				}
 			},
 			"compositePrimaryKeys": {},

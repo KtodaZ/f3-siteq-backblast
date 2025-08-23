@@ -75,12 +75,17 @@ export const createTRPCRouter = t.router;
 
 /**
  * Middleware for timing procedure execution and adding an artificial delay in development.
- *
- * You can remove this if you don't like it, but it can help catch unwanted waterfalls by simulating
- * network latency that would occur in production but not in local development.
+ * Enhanced with ultra-debugging for transaction rollback detection.
  */
-const timingMiddleware = t.middleware(async ({ next, path }) => {
+const timingMiddleware = t.middleware(async ({ next, path, input }) => {
 	const start = Date.now();
+	const procedureId = `${path}-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+	
+	// 🔍 ULTRA-DEBUG: Enhanced logging for createPersonWithFace
+	if (path === 'people.createPersonWithFace') {
+		console.log(`🎬 ULTRA-DEBUG: tRPC procedure ${path} STARTING with input:`, input);
+		console.log(`🆔 ULTRA-DEBUG: Procedure ID: ${procedureId}`);
+	}
 
 	if (t._config.isDev) {
 		// artificial delay in dev
@@ -88,10 +93,42 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
 		await new Promise((resolve) => setTimeout(resolve, waitMs));
 	}
 
-	const result = await next();
+	let result;
+	let procedureError = null;
+	
+	try {
+		result = await next();
+		
+		// 🔍 ULTRA-DEBUG: Log successful completion
+		if (path === 'people.createPersonWithFace') {
+			console.log(`✅ ULTRA-DEBUG: tRPC procedure ${path} COMPLETED SUCCESSFULLY`);
+			console.log(`📊 ULTRA-DEBUG: Result preview:`, {
+				success: result?.success,
+				personId: result?.person?.id,
+				faceId: result?.face?.id,
+				procedureId,
+			});
+		}
+	} catch (error) {
+		procedureError = error;
+		
+		// 🔍 ULTRA-DEBUG: Log procedure errors
+		if (path === 'people.createPersonWithFace') {
+			console.error(`❌ ULTRA-DEBUG: tRPC procedure ${path} FAILED with error:`, error);
+			console.error(`🆔 ULTRA-DEBUG: Failed procedure ID: ${procedureId}`);
+		}
+		
+		throw error; // Re-throw the error
+	}
 
 	const end = Date.now();
 	console.log(`[TRPC] ${path} took ${end - start}ms to execute`);
+
+	// 🔍 ULTRA-DEBUG: Final status log
+	if (path === 'people.createPersonWithFace') {
+		console.log(`🏁 ULTRA-DEBUG: tRPC middleware for ${path} FINISHED - about to return result to client`);
+		console.log(`🆔 ULTRA-DEBUG: Final procedure ID: ${procedureId}`);
+	}
 
 	return result;
 });

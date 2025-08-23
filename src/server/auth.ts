@@ -1,16 +1,21 @@
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
-import { type GetServerSidePropsContext } from "next";
+import type { GetServerSidePropsContext } from "next";
 import {
-  getServerSession,
-  type DefaultSession,
-  type NextAuthOptions,
+	type DefaultSession,
+	type NextAuthOptions,
+	getServerSession,
 } from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
+import GoogleProvider from "next-auth/providers/google";
 
 import { env } from "~/env";
 import { db } from "~/server/db";
-import { users, accounts, sessions, verificationTokens } from "~/server/db/schema";
+import {
+	accounts,
+	sessions,
+	users,
+	verificationTokens,
+} from "~/server/db/schema";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -19,18 +24,18 @@ import { users, accounts, sessions, verificationTokens } from "~/server/db/schem
  * @see https://next-auth.js.org/getting-started/typescript#module-augmentation
  */
 declare module "next-auth" {
-  interface Session extends DefaultSession {
-    user: {
-      id: string;
-      // ...other properties
-      // role: UserRole;
-    } & DefaultSession["user"];
-  }
+	interface Session extends DefaultSession {
+		user: {
+			id: string;
+			// ...other properties
+			// role: UserRole;
+		} & DefaultSession["user"];
+	}
 
-  // interface User {
-  //   // ...other properties
-  //   // role: UserRole;
-  // }
+	// interface User {
+	//   // ...other properties
+	//   // role: UserRole;
+	// }
 }
 
 /**
@@ -39,47 +44,47 @@ declare module "next-auth" {
  * @see https://next-auth.js.org/configuration/options
  */
 export const authOptions: NextAuthOptions = {
-  callbacks: {
-    session: ({ session, user }) => ({
-      ...session,
-      user: {
-        ...session.user,
-        id: user.id,
-      },
-    }),
-  },
-  adapter: DrizzleAdapter(db, {
-    usersTable: users,
-    accountsTable: accounts,
-    sessionsTable: sessions,
-    verificationTokensTable: verificationTokens,
-  }),
-  providers: [
-    GoogleProvider({
-      clientId: env.GOOGLE_CLIENT_ID ?? "",
-      clientSecret: env.GOOGLE_CLIENT_SECRET ?? "",
-    }),
-    GitHubProvider({
-      clientId: env.GITHUB_CLIENT_ID ?? "",
-      clientSecret: env.GITHUB_CLIENT_SECRET ?? "",
-    }),
-    /**
-     * ...add more providers here.
-     *
-     * Most other providers require a bit more work than the Discord provider. For example, the
-     * GitHub provider requires you to add the `refresh_token_expires_in` field to the Account
-     * model. Refer to the NextAuth.js docs for the provider you want to use. Example:
-     *
-     * @see https://next-auth.js.org/providers/github
-     */
-  ],
-  pages: {
-    signIn: "/auth/signin",
-    signOut: "/auth/signout",
-  },
-  session: {
-    strategy: "database",
-  },
+	callbacks: {
+		session: ({ session, user }) => ({
+			...session,
+			user: {
+				...session.user,
+				id: user.id,
+			},
+		}),
+	},
+	adapter: DrizzleAdapter(db, {
+		usersTable: users,
+		accountsTable: accounts,
+		sessionsTable: sessions,
+		verificationTokensTable: verificationTokens,
+	}),
+	providers: [
+		GoogleProvider({
+			clientId: env.GOOGLE_CLIENT_ID ?? "",
+			clientSecret: env.GOOGLE_CLIENT_SECRET ?? "",
+		}),
+		GitHubProvider({
+			clientId: env.GITHUB_CLIENT_ID ?? "",
+			clientSecret: env.GITHUB_CLIENT_SECRET ?? "",
+		}),
+		/**
+		 * ...add more providers here.
+		 *
+		 * Most other providers require a bit more work than the Discord provider. For example, the
+		 * GitHub provider requires you to add the `refresh_token_expires_in` field to the Account
+		 * model. Refer to the NextAuth.js docs for the provider you want to use. Example:
+		 *
+		 * @see https://next-auth.js.org/providers/github
+		 */
+	],
+	pages: {
+		signIn: "/auth/signin",
+		signOut: "/auth/signout",
+	},
+	session: {
+		strategy: "database",
+	},
 };
 
 /**
@@ -88,8 +93,8 @@ export const authOptions: NextAuthOptions = {
  * @see https://next-auth.js.org/configuration/nextjs
  */
 export const getServerAuthSession = (ctx: {
-  req: GetServerSidePropsContext["req"];
-  res: GetServerSidePropsContext["res"];
+	req: GetServerSidePropsContext["req"];
+	res: GetServerSidePropsContext["res"];
 }) => {
-  return getServerSession(ctx.req, ctx.res, authOptions);
+	return getServerSession(ctx.req, ctx.res, authOptions);
 };

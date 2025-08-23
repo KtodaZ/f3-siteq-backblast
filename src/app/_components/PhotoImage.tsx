@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { api } from "~/trpc/react";
 
 interface PhotoImageProps {
@@ -11,17 +11,24 @@ interface PhotoImageProps {
 	onLoad?: (event: React.SyntheticEvent<HTMLImageElement, Event>) => void;
 }
 
-export default function PhotoImage({ photoId, filename, alt, className, onLoad }: PhotoImageProps) {
+export default function PhotoImage({
+	photoId,
+	filename,
+	alt,
+	className,
+	onLoad,
+}: PhotoImageProps) {
 	const [imageUrl, setImageUrl] = useState<string | null>(null);
 	const [error, setError] = useState(false);
 
-	const { data: presignedUrlData, isError } = api.photo.getPresignedUrl.useQuery(
-		{ photoId },
-		{
-			staleTime: 30 * 60 * 1000, // Consider fresh for 30 minutes
-			refetchOnWindowFocus: false,
-		}
-	);
+	const { data: presignedUrlData, isError } =
+		api.photo.getPresignedUrl.useQuery(
+			{ photoId },
+			{
+				staleTime: 30 * 60 * 1000, // Consider fresh for 30 minutes
+				refetchOnWindowFocus: false,
+			},
+		);
 
 	useEffect(() => {
 		if (presignedUrlData?.url) {
@@ -34,7 +41,9 @@ export default function PhotoImage({ photoId, filename, alt, className, onLoad }
 
 	if (error || !imageUrl) {
 		return (
-			<div className={`flex h-full items-center justify-center bg-gray-200 ${className}`}>
+			<div
+				className={`flex h-full items-center justify-center bg-gray-200 ${className}`}
+			>
 				<span className="text-gray-500 text-sm">
 					{error ? "❌ Failed to load" : "⏳ Loading..."}
 				</span>

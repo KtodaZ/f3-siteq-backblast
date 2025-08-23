@@ -1,27 +1,34 @@
 {
-  "version": "7",
-  "dialect": "postgresql",
-  "entries": [
-    {
-      "idx": 0,
-      "version": "7",
-      "when": 1755584005308,
-      "tag": "0000_lyrical_diamondback",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1755613493175,
-      "tag": "0001_careful_speed",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1755634431671,
-      "tag": "0002_serious_franklin_richards",
-      "breakpoints": true
-    }
-  ]
+	"version": "7",
+	"dialect": "postgresql",
+	"entries": [
+		{
+			"idx": 0,
+			"version": "7",
+			"when": 1755584005308,
+			"tag": "0000_lyrical_diamondback",
+			"breakpoints": true
+		},
+		{
+			"idx": 1,
+			"version": "7",
+			"when": 1755613493175,
+			"tag": "0001_careful_speed",
+			"breakpoints": true
+		},
+		{
+			"idx": 2,
+			"version": "7",
+			"when": 1755634431671,
+			"tag": "0002_serious_franklin_richards",
+			"breakpoints": true
+		},
+		{
+			"idx": 3,
+			"version": "7",
+			"when": 1755786401823,
+			"tag": "0003_colossal_sprite",
+			"breakpoints": true
+		}
+	]
 }

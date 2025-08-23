@@ -1,31 +1,31 @@
 {
-  "name": "f3-face-recognition-lambda",
-  "version": "1.0.0",
-  "description": "AWS Lambda functions for F3 face recognition processing",
-  "main": "detectFaces.js",
-  "type": "module",
-  "scripts": {
-    "test": "node --test",
-    "deploy": "aws lambda update-function-code --function-name",
-    "package": "zip -r function.zip ."
-  },
-  "dependencies": {
-    "@aws-sdk/client-rekognition": "^3.650.0",
-    "@aws-sdk/client-s3": "^3.650.0",
-    "drizzle-orm": "^0.41.0",
-    "postgres": "^3.4.4",
-    "sharp": "^0.33.5"
-  },
-  "devDependencies": {
-    "@types/node": "^20.14.10"
-  },
-  "keywords": [
-    "aws",
-    "lambda",
-    "face-recognition",
-    "rekognition",
-    "serverless"
-  ],
-  "author": "F3 Face Recognition",
-  "license": "MIT"
+	"name": "f3-face-recognition-lambda",
+	"version": "1.0.0",
+	"description": "AWS Lambda functions for F3 face recognition processing",
+	"main": "detectFaces.js",
+	"type": "module",
+	"scripts": {
+		"test": "node --test",
+		"deploy": "aws lambda update-function-code --function-name",
+		"package": "zip -r function.zip ."
+	},
+	"dependencies": {
+		"@aws-sdk/client-rekognition": "^3.650.0",
+		"@aws-sdk/client-s3": "^3.650.0",
+		"drizzle-orm": "^0.41.0",
+		"postgres": "^3.4.4",
+		"sharp": "^0.33.5"
+	},
+	"devDependencies": {
+		"@types/node": "^20.14.10"
+	},
+	"keywords": [
+		"aws",
+		"lambda",
+		"face-recognition",
+		"rekognition",
+		"serverless"
+	],
+	"author": "F3 Face Recognition",
+	"license": "MIT"
 }

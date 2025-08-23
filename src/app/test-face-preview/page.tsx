@@ -16,14 +16,14 @@ export default function TestFacePreviewPage() {
 	return (
 		<div className="container mx-auto max-w-4xl px-4 py-8">
 			<h1 className="mb-8 text-center font-bold text-3xl">Face Preview Test</h1>
-			
+
 			<div className="grid gap-8 lg:grid-cols-2">
 				{/* Original Image */}
 				<div className="space-y-4">
 					<h2 className="font-semibold text-xl">Original Image</h2>
-					<img 
-						src={testImageUrl} 
-						alt="Test group photo" 
+					<img
+						src={testImageUrl}
+						alt="Group of people for face recognition testing"
 						className="w-full rounded-lg shadow-lg"
 					/>
 				</div>
@@ -31,7 +31,7 @@ export default function TestFacePreviewPage() {
 				{/* Face Preview Tests */}
 				<div className="space-y-4">
 					<h2 className="font-semibold text-xl">Face Previews</h2>
-					
+
 					<div className="space-y-4">
 						<div className="flex items-center space-x-4">
 							<FacePreview
@@ -69,7 +69,9 @@ export default function TestFacePreviewPage() {
 
 					{/* Multiple face examples */}
 					<div className="mt-8">
-						<h3 className="font-semibold text-lg mb-4">Multiple Face Examples</h3>
+						<h3 className="mb-4 font-semibold text-lg">
+							Multiple Face Examples
+						</h3>
 						<div className="flex space-x-4">
 							<FacePreview
 								imageUrl={testImageUrl}
@@ -87,7 +89,12 @@ export default function TestFacePreviewPage() {
 							/>
 							<FacePreview
 								imageUrl={testImageUrl}
-								boundingBox={{ left: 0.7, top: 0.25, width: 0.25, height: 0.35 }}
+								boundingBox={{
+									left: 0.7,
+									top: 0.25,
+									width: 0.25,
+									height: 0.35,
+								}}
 								size={64}
 								alt="Face 3"
 								className="border-2 border-purple-200"
@@ -97,8 +104,8 @@ export default function TestFacePreviewPage() {
 
 					{/* Bounding box info */}
 					<div className="mt-8 rounded-lg bg-gray-50 p-4">
-						<h3 className="font-semibold text-lg mb-2">Test Bounding Box</h3>
-						<pre className="text-sm text-gray-600">
+						<h3 className="mb-2 font-semibold text-lg">Test Bounding Box</h3>
+						<pre className="text-gray-600 text-sm">
 							{JSON.stringify(testBoundingBox, null, 2)}
 						</pre>
 					</div>

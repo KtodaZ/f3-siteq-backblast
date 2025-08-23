@@ -45,12 +45,17 @@ export function Navigation() {
 
 					{/* Mobile menu button */}
 					<div className="md:hidden">
-						<button className="text-gray-600 hover:text-gray-900 focus:text-gray-900 focus:outline-none">
+						<button
+							type="button"
+							className="text-gray-600 hover:text-gray-900 focus:text-gray-900 focus:outline-none"
+						>
 							<svg
 								className="h-6 w-6"
 								fill="none"
 								viewBox="0 0 24 24"
 								stroke="currentColor"
+								aria-label="Open menu"
+								role="img"
 							>
 								<path
 									strokeLinecap="round"
